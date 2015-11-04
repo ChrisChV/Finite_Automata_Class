@@ -5,6 +5,8 @@
 #include "map"
 #include "algorithm"
 #include "fstream"
+#include "cstring"
+#include "iostream"
 
 using namespace std;
 
@@ -22,6 +24,7 @@ class AutomataFinito
                 list<string> relaciones(char);
                 string nombre;
                 bool aseptacion;
+                int numero;
                 map<string,list<char>> estadosDestino; ///APunto;
                 map<string,list<char>> estadosOrigen; ///MeApuntan;
         };
@@ -56,7 +59,11 @@ class AutomataFinito
 bool AutomataFinito::esDeterminista(){
     int siz = alfabeto.size();
     for(auto iter = estados.begin(); iter != estados.end(); ++iter){
-        if(iter->second->estadosDestino.size() != siz) return false;
+        int temp = 0;
+        for(auto iter2 = iter->second->estadosDestino.begin(); iter2 != iter->second->estadosDestino.end(); ++iter2){
+            temp += iter2->second.size();
+        }
+        if(siz != temp)return false;
     }
     return true;
 }
@@ -64,8 +71,11 @@ bool AutomataFinito::esDeterminista(){
 bool AutomataFinito::algunoEsAseptacion(list<string>& estados){
     for(string iter : estados){
         Estado * estado;
-        _existeEstado(iter,estado);
-        if(estado->aseptacion)return true;
+        ///cout<<"ITER->"<<iter<<endl;
+        if(_existeEstado(iter,estado)){
+            ///cout<<estado->nombre<<"->"<<estado->aseptacion<<endl;
+            if(estado->aseptacion)return true;
+        }
     }
     return false;
 }
@@ -93,23 +103,30 @@ list<string> AutomataFinito::_estadoConjunto(string nombre){
     list<string> resultado;
     string sResultado;
     int estado = 0;
+    auto it = nombre.begin();
     for(auto iter = nombre.begin(); iter != nombre.end(); ++iter){
         switch(estado){
             case 0:
                 if(*iter == '{') estado = 1;
                 else return resultado;
+                break;
             case 1:
                 if(*iter == ',') estado = 2;
-                else if(*iter == '}') estado = 3;
+                else if(*iter == '}'){
+                    resultado.push_back(sResultado);
+                    ///cout<<"CON->"<<sResultado<<endl;
+                    resultado.sort();
+                    return resultado;
+                }
                 else sResultado.insert(sResultado.end(),*iter);
+                break;
             case 2:
                 resultado.push_back(sResultado);
+                ///cout<<"CON->"<<sResultado<<endl;
                 sResultado.clear();
                 estado = 1;
-            case 3:
-                resultado.push_back(sResultado);
-                resultado.sort();
-                return resultado;
+                sResultado.insert(sResultado.end(),*iter);
+                break;
         }
     }
 }
@@ -128,13 +145,22 @@ AutomataFinito AutomataFinito::volverDeterminista(){
     if(determinista)return nuevo;
     nuevo.crearEstado(estadoInicial->nombre,estadoInicial->aseptacion);
     nuevo.crearAlfabeto(alfabeto);
-    for(auto iter = nuevo.getEstados().begin(); iter != nuevo.getEstados().end(); ++iter){
-        list<string> estados = _estadoConjunto(iter->first);
-        if(estados.empty()) estados.push_back(iter->first);
+    ///nuevo.print();
+    ///char t;
+    ///cin>>t;
+    list<string> candidatos;
+    candidatos.push_back(estadoInicial->nombre);
+    auto nuevoEstados = nuevo.getEstados();
+    for(auto iter = candidatos.begin(); iter != candidatos.end(); ++iter){
+        cout<<"HHHHH->"<<*iter<<endl;
+        list<string> estados = _estadoConjunto(*iter);
+        if(estados.empty()) estados.push_back(*iter);
+        ///cout<<"holaaa->"<<estados.front()<<endl;
         for(auto iter2 = alfabeto.begin(); iter2 != alfabeto.end(); ++iter2){
             list<string> destinos;
             for(string s : estados){
-                if(s == "basura"){
+                const char *stemp = s.c_str();
+                if(strcmp(stemp,"basura") == 0){
                     destinos.push_back("basura");
                     break;
                 }
@@ -144,8 +170,22 @@ AutomataFinito AutomataFinito::volverDeterminista(){
                 destinos.insert(destinos.end(),relaciones.begin(),relaciones.end());
             }
             string nDestino = _crearEstadoConjunto(destinos);
-            nuevo.crearEstado(nDestino,algunoEsAseptacion(estados));
-            nuevo.crearRelacion(iter->first,nDestino,*iter2);
+            ///cout<<"DESTINO->"<<nDestino<<endl;
+            ///cout<<nDestino<<"->"<<endl;
+            list<string> temp = _estadoConjunto(nDestino);
+            bool asep = algunoEsAseptacion(temp);
+            if(estados.front() == "basura") asep = false;
+            ///cout<<asep<<endl;
+
+            nuevo.crearEstado(nDestino,asep);
+            ///nuevo.print();
+            ///char t;
+            ///cin>>t;
+            nuevo.crearRelacion(*iter,nDestino,*iter2);
+            if(find(candidatos.begin(),candidatos.end(),nDestino) == candidatos.end()) candidatos.push_back(nDestino);
+            ///nuevo.print();
+            ///char t;
+            ///cin>>t;
         }
     }
     return nuevo;
@@ -179,16 +219,20 @@ void AutomataFinito::print(){
     for(auto iter = estados.begin(); iter != estados.end(); ++iter){
         string color = "black";
         if(iter->second->aseptacion) color = "red";
-        archivo<<iter->first<<" [color = \""<<color<<"\"];"<<endl;
+        ///cout<<iter->second->numero<<"->"<<iter->first<<endl;
+        archivo<<iter->second->numero<<" [label=\""<<iter->first<<"\"color = \""<<color<<"\"];"<<endl;
         for(auto iter2 = iter->second->estadosDestino.begin(); iter2 != iter->second->estadosDestino.end(); ++iter2){
             for(auto iter3 = iter2->second.begin(); iter3 != iter2->second.end(); ++iter3){
-                archivo<<iter->first<<"->"<<iter2->first<<" [label=\""<<*iter3<<"\"];"<<endl;
+                Estado * temp;
+                _existeEstado(iter2->first,temp);
+                ///cout<<temp->numero<<"->"<<temp->nombre<<endl;
+                archivo<<iter->second->numero<<"->"<<temp->numero<<" [label=\""<<*iter3<<"\"];"<<endl;
             }
         }
     }
     string color = "green";
     if(estadoInicial->aseptacion) color = "blue";
-    archivo<<estadoInicial->nombre<<" [color = \""<<color<<"\"];"<<endl;
+    archivo<<estadoInicial->numero<<" [label = \""<<estadoInicial->nombre<< "\"color = \""<<color<<"\"];"<<endl;
     archivo<<"}";
     archivo.close();
     string comando = "dot -Tpdf " + name + ".dot -o " + name + ".pdf";
@@ -240,6 +284,7 @@ void AutomataFinito::crearEstado(string name, bool aseptacion){
     nuevo = new Estado(name,aseptacion);
     if(!estadoInicial) estadoInicial = nuevo;
     estados[name] = nuevo;
+    nuevo->numero = estados.size() - 1;
     determinista = esDeterminista();
 }
 
@@ -249,6 +294,7 @@ void AutomataFinito::crearEstado(string name){
     nuevo = new Estado(name);
     if(!estadoInicial) estadoInicial = nuevo;
     estados[name] = nuevo;
+    nuevo->numero = estados.size() - 1;
     determinista = esDeterminista();
 }
 
@@ -266,11 +312,13 @@ AutomataFinito::Estado::Estado(string name){
 AutomataFinito::Estado::Estado(){
     nombre = nullptr;
     aseptacion = false;
+    numero = -1;
 }
 
 AutomataFinito::Estado::Estado(string name, bool aseptacion){
     nombre = name;
     this->aseptacion = aseptacion;
+    numero = -1;
 }
 
 AutomataFinito::AutomataFinito(){
