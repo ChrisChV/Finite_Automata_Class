@@ -1,0 +1,9 @@
+digraph{
+S0 [color = "black"];
+S0->S1 [label="y"];
+S0->S2 [label="y"];
+S1 [color = "black"];
+S1->S0 [label="x"];
+S2 [color = "red"];
+S0 [color = "green"];
+}

@@ -1,0 +1,20 @@
+# depslib dependency file v1.0
+1446561051 source:/home/chris/Documentos/AutomatasFInitos/src/AutomataFInito.cpp
+
+1446579864 source:/home/chris/Documentos/AutomatasFInitos/main.cpp
+	<iostream>
+	"AutomataFinito.h"
+
+1446565818 /home/chris/Documentos/AutomatasFInitos/include/AutomataFInito.h
+	"list"
+	"map"
+	"algorithm"
+
+1446568103 source:/home/chris/Documentos/AutomatasFInitos/src/AutomataFinito.cpp
+
+1446579564 /home/chris/Documentos/AutomatasFInitos/include/AutomataFinito.h
+	"list"
+	"map"
+	"algorithm"
+	"fstream"
+
