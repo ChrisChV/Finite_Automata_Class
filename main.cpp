@@ -5,6 +5,7 @@ using namespace std;
 int main()
 {
     AutomataFinito autito;
+
     /*
     autito.crearEstado("1");
     autito.crearEstado("2");
@@ -21,6 +22,7 @@ int main()
     autito.crearRelacion("basura","basura",'a');
     autito.crearRelacion("basura","basura",'b');
     */
+
     /*autito.crearEstado("S0");
     autito.crearEstado("S1");
     autito.crearEstado("S2",true);
@@ -30,6 +32,19 @@ int main()
     autito.crearRelacion("S0","S2",'y');
     autito.crearRelacion("S1","S0",'x');
     */
+
+    /*
+    autito.crearEstado("1");
+    autito.crearEstado("2");
+    autito.crearEstado("3",true);
+    autito.addCaracter('a');
+    autito.addCaracter('b');
+    autito.crearRelacion("1","2",'b');
+    autito.crearRelacion("2","1",'a');
+    autito.crearRelacion("1","3",'b');
+    autito.crearRelacion("2","3",'a');
+    */
+
 
     autito.crearEstado("1",true);
     autito.crearEstado("2",true);
@@ -53,9 +68,12 @@ int main()
     autito.crearRelacion("5","5",'b');
     autito.crearRelacion("6","6",'b');
     autito.crearRelacion("6","5",'a');
+
+
     autito.print();
     AutomataFinito att = autito.volverDeterminista();
     att.print();
+    cout<<att.verificarCadena("abbbbbbbbbbbbbbbba")<<endl;;
     cout<<"HHHHHHHHHHolaaaaaaaaaaaaa"<<endl;
     cout<<att.esDeterminista()<<endl;
 

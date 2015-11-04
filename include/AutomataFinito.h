@@ -38,15 +38,19 @@ class AutomataFinito
         void addCaracter(const char);
         bool verificarCadena(string);
         AutomataFinito volverDeterminista();
+        int size();
+        bool empty();
         void print();
         bool crearRelacion(string, string, char);
         map<string,Estado *>& getEstados();
         virtual ~AutomataFinito();
     protected:
     private:
+        AutomataFinito(Estado * estadoInicial,list<char> alfabeto,map<string,Estado *> estados,string name,bool determinista);
         bool _existeEstado(string, Estado *&);
         bool _existeCaracter(char);
         bool _verificarCadena(string, char, Estado *);
+        void _crearEstado(string, bool);
         list<string> _estadoConjunto(string);
         string _crearEstadoConjunto(list<string>&);
         Estado * estadoInicial;
@@ -71,9 +75,9 @@ bool AutomataFinito::esDeterminista(){
 bool AutomataFinito::algunoEsAseptacion(list<string>& estados){
     for(string iter : estados){
         Estado * estado;
-        ///cout<<"ITER->"<<iter<<endl;
+        //cout<<"ITER->"<<iter<<endl;
         if(_existeEstado(iter,estado)){
-            ///cout<<estado->nombre<<"->"<<estado->aseptacion<<endl;
+            //cout<<estado->nombre<<"->"<<estado->aseptacion<<endl;
             if(estado->aseptacion)return true;
         }
     }
@@ -108,7 +112,10 @@ list<string> AutomataFinito::_estadoConjunto(string nombre){
         switch(estado){
             case 0:
                 if(*iter == '{') estado = 1;
-                else return resultado;
+                else{
+                    resultado.push_back(nombre);
+                    return resultado;
+                }
                 break;
             case 1:
                 if(*iter == ',') estado = 2;
@@ -142,8 +149,11 @@ list<string> AutomataFinito::Estado::relaciones(char caracter){
 
 AutomataFinito AutomataFinito::volverDeterminista(){
     AutomataFinito nuevo;
-    if(determinista)return nuevo;
-    nuevo.crearEstado(estadoInicial->nombre,estadoInicial->aseptacion);
+    if(determinista or !estadoInicial){
+        AutomataFinito det(estadoInicial,alfabeto,estados,name,determinista);
+        return det;
+    }
+    nuevo._crearEstado(estadoInicial->nombre,estadoInicial->aseptacion);
     nuevo.crearAlfabeto(alfabeto);
     ///nuevo.print();
     ///char t;
@@ -154,7 +164,6 @@ AutomataFinito AutomataFinito::volverDeterminista(){
     for(auto iter = candidatos.begin(); iter != candidatos.end(); ++iter){
         cout<<"HHHHH->"<<*iter<<endl;
         list<string> estados = _estadoConjunto(*iter);
-        if(estados.empty()) estados.push_back(*iter);
         ///cout<<"holaaa->"<<estados.front()<<endl;
         for(auto iter2 = alfabeto.begin(); iter2 != alfabeto.end(); ++iter2){
             list<string> destinos;
@@ -170,14 +179,14 @@ AutomataFinito AutomataFinito::volverDeterminista(){
                 destinos.insert(destinos.end(),relaciones.begin(),relaciones.end());
             }
             string nDestino = _crearEstadoConjunto(destinos);
-            ///cout<<"DESTINO->"<<nDestino<<endl;
+            //cout<<"DESTINO->"<<nDestino<<endl;
             ///cout<<nDestino<<"->"<<endl;
             list<string> temp = _estadoConjunto(nDestino);
             bool asep = algunoEsAseptacion(temp);
             if(estados.front() == "basura") asep = false;
-            ///cout<<asep<<endl;
+            //cout<<asep<<endl;
 
-            nuevo.crearEstado(nDestino,asep);
+            nuevo._crearEstado(nDestino,asep);
             ///nuevo.print();
             ///char t;
             ///cin>>t;
@@ -215,6 +224,14 @@ bool AutomataFinito::verificarCadena(string cadena){
 void AutomataFinito::print(){
     string file = name + ".dot";
     ofstream archivo(file);
+    if(!estadoInicial){
+        archivo<<"digraph{"<<endl<<"}";
+        archivo.close();
+        string comando = "dot -Tpdf " + name + ".dot -o " + name + ".pdf";
+        const char *c = comando.c_str();
+        system(c);
+        return;
+    }
     archivo<<"digraph{"<<endl;
     for(auto iter = estados.begin(); iter != estados.end(); ++iter){
         string color = "black";
@@ -278,7 +295,18 @@ void AutomataFinito::addCaracter(const char caracter){
     determinista = esDeterminista();
 }
 
+void AutomataFinito::_crearEstado(string name, bool aseptacion){
+    Estado * nuevo;
+    if(_existeEstado(name,nuevo))return;
+    nuevo = new Estado(name,aseptacion);
+    if(!estadoInicial) estadoInicial = nuevo;
+    estados[name] = nuevo;
+    nuevo->numero = estados.size() - 1;
+    determinista = esDeterminista();
+}
+
 void AutomataFinito::crearEstado(string name, bool aseptacion){
+    if(name == "basura")return;
     Estado * nuevo;
     if(_existeEstado(name,nuevo))return;
     nuevo = new Estado(name,aseptacion);
@@ -289,6 +317,7 @@ void AutomataFinito::crearEstado(string name, bool aseptacion){
 }
 
 void AutomataFinito::crearEstado(string name){
+    if(name == "basura")return;
     Estado * nuevo;
     if(_existeEstado(name,nuevo))return;
     nuevo = new Estado(name);
@@ -303,6 +332,14 @@ bool AutomataFinito::_existeEstado(string name, Estado *&estado){
     estado = iter->second;
     if(iter != estados.end())return true;
     return false;
+}
+
+bool AutomataFinito::empty(){
+    return estados.empty();
+}
+
+int AutomataFinito::size(){
+    return estados.size();
 }
 
 AutomataFinito::Estado::Estado(string name){
@@ -325,6 +362,14 @@ AutomataFinito::AutomataFinito(){
     estadoInicial = nullptr;
     determinista = false;
     name = "AutomataDefault";
+}
+
+AutomataFinito::AutomataFinito(Estado * estadoInicial,list<char> alfabeto,map<string,Estado *> estados,string name,bool determinista){
+    this->estadoInicial = estadoInicial;
+    this->alfabeto = alfabeto;
+    this->estados = estados;
+    this->name = name;
+    this->determinista = determinista;
 }
 
 AutomataFinito::AutomataFinito(string name){
