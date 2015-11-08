@@ -33,11 +33,13 @@ class AutomataFinito
         void crearEstado(string, bool);
         void crearEstado(string);
         void crearAlfabeto(list<char>);
+        void cambiarEstadoInicial(string);
         bool algunoEsAseptacion(list<string> &);
         bool esDeterminista();
         void addCaracter(const char);
         bool verificarCadena(string);
         AutomataFinito volverDeterminista();
+        AutomataFinito automataMinimo();
         int size();
         bool empty();
         void print();
@@ -51,6 +53,10 @@ class AutomataFinito
         bool _existeCaracter(char);
         bool _verificarCadena(string, char, Estado *);
         void _crearEstado(string, bool);
+        void _recuperarTipoEstado(list<string> &, list<string> &);
+        int _AM_buscarResultados(string, char,list<tuple<int,string>> &);
+        list<string> _AM_generarParticiones(map<int,list<string>>);
+        AutomataFinito _AM_generarAutomata(list<tuple<int,string>>&,string);
         list<string> _estadoConjunto(string);
         string _crearEstadoConjunto(list<string>&);
         Estado * estadoInicial;
@@ -59,6 +65,121 @@ class AutomataFinito
         string name;
         bool determinista;
 };
+
+void AutomataFinito::cambiarEstadoInicial(string estado){
+    Estado * temp;
+    if(!_existeEstado(estado,temp))return;
+    estadoInicial = temp;
+}
+
+void AutomataFinito::_recuperarTipoEstado(list<string> &finales, list<string> &noFinales){
+    for(auto iter = estados.begin(); iter != estados.end(); ++iter){
+        if(iter->second->aseptacion)finales.push_back(iter->first);
+        else noFinales.push_back(iter->first);
+    }
+}
+
+list<string> AutomataFinito::_AM_generarParticiones(map<int,list<string>> resultados){
+    list<string> resultado;
+    for(auto iter = resultados.begin(); iter != resultados.end(); ++iter){
+        resultado.push_back(_crearEstadoConjunto(iter->second));
+    }
+    return resultado;
+}
+
+int AutomataFinito::_AM_buscarResultados(string estado, char caracter,list<tuple<int,string>> &candidatos){
+    Estado * temp;
+    _existeEstado(estado,temp);
+    string resultado = temp->relaciones(caracter).front();
+    const char * c_resultado = resultado.c_str();
+    list<tuple<int,string>> estados;
+    for(auto iter : candidatos){
+        list<string> resEstadoCon = _estadoConjunto(get<1>(iter));
+        for(string siter: resEstadoCon){
+            estados.push_back(make_tuple(get<0>(iter),siter));
+        }
+    }
+    for(auto iter : estados){
+        const char * c_iter = get<1>(iter).c_str();
+        if(strcmp(c_resultado,c_iter) == 0)return get<0>(iter);
+    }
+    return -1;
+}
+
+
+AutomataFinito AutomataFinito::_AM_generarAutomata(list<tuple<int,string>>& candidatos,string estadoInicial){
+    AutomataFinito nuevo;
+    nuevo.crearAlfabeto(alfabeto);
+    map<string,list<string>> estadosConjunto;
+    for(auto tuple_iter : candidatos){
+        list<string> temp = _estadoConjunto(get<1>(tuple_iter));
+        estadosConjunto[get<1>(tuple_iter)] = temp;
+        string name = "[" + temp.front() + "]";
+        nuevo._crearEstado(name,algunoEsAseptacion(temp));
+    }
+    for(auto iter = estadosConjunto.begin(); iter != estadosConjunto.end(); ++iter){
+        Estado * temp;
+        string name = "[" + iter->second.front() + "]";
+
+        _existeEstado(iter->second.front(),temp);
+        for(char alfa_iter : alfabeto){
+            string relacion = temp->relaciones(alfa_iter).front();
+            for(auto iter2 = estadosConjunto.begin(); iter2 != estadosConjunto.end(); ++iter2){
+                if(find(iter2->second.begin(),iter2->second.end(),relacion) != iter2->second.end()){
+                    cout<<"dsadsadasdasda"<<endl;
+                    string name2 = "[" + iter2->second.front() +  "]";
+                    cout<<"namw2->"<<name2<<endl;
+                    nuevo.crearRelacion(name,name2,alfa_iter);
+                    nuevo.print();
+                }
+            }
+        }
+    }
+    string estadoI = "[" + estadoInicial + "]";
+    nuevo.cambiarEstadoInicial(estadoI);
+    return nuevo;
+}
+
+AutomataFinito AutomataFinito::automataMinimo(){
+    list<tuple<int,string>> candidatos;
+    list<tuple<int,string>> candidatosSiguientes;
+    list<string> estadosFinales;
+    list<string> estadosNoFinales;
+    _recuperarTipoEstado(estadosFinales, estadosNoFinales);
+    candidatos.push_back(make_tuple(1,_crearEstadoConjunto(estadosFinales)));
+    candidatos.push_back(make_tuple(2,_crearEstadoConjunto(estadosNoFinales)));
+    int cont = 3;
+    bool huboParticion = true;
+    while(huboParticion){
+        candidatosSiguientes.clear();
+        huboParticion = false;
+        for(auto iter : candidatos){
+            list<string> sEstados = _estadoConjunto(get<1>(iter));
+            map<int,list<string>>  resultados;
+            for(char c_iter : alfabeto){
+                resultados.clear();
+                for(string s_iter : sEstados){
+                    resultados[_AM_buscarResultados(s_iter,c_iter,candidatos)].push_back(s_iter);
+                }
+                if(resultados.size() > 1)break;
+            }
+            if(resultados.size() == 1){
+                candidatosSiguientes.push_back(make_tuple(candidatosSiguientes.size() + 1 , get<1>(iter)));
+            }
+            else{
+                huboParticion = true;
+                list<string> particiones = _AM_generarParticiones(resultados);
+                for(string part_iter : particiones){
+                    candidatosSiguientes.push_back(make_tuple(candidatosSiguientes.size() + 1,part_iter));
+                }
+            }
+        }
+        candidatos = candidatosSiguientes;
+    }
+    return  _AM_generarAutomata(candidatosSiguientes,estadoInicial->nombre);
+
+
+}
 
 bool AutomataFinito::esDeterminista(){
     int siz = alfabeto.size();
