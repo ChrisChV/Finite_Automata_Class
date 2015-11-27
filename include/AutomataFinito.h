@@ -38,11 +38,13 @@ class AutomataFinito
         bool algunoEsAseptacion(list<string> &);
         bool esDeterminista();
         void addCaracter(const char);
-        void addDestinos(string, map<string,list<char>>);
-        AutomataFinito uni(AutomataFinito &second);
+        void addDestinos(string, map<string,list<char>>&);
+        void _addDestinos(string, map<string,list<char>>&,map<string,string>&);
+        AutomataFinito uni(AutomataFinito &second,string);
         bool verificarCadena(string);
         AutomataFinito volverDeterminista();
         AutomataFinito automataMinimo();
+        AutomataFinito generarAutomataElemental(char);
         int size();
         bool empty();
         void print();
@@ -56,45 +58,84 @@ class AutomataFinito
         bool _existeCaracter(char);
         bool _verificarCadena(string, char, Estado *);
         void _crearEstado(string, bool);
+        void _addCaracter(const char);
         void _recuperarTipoEstado(list<string> &, list<string> &);
         int _AM_buscarResultados(string, char,list<tuple<int,string>> &);
         list<string> _AM_generarParticiones(map<int,list<string>>);
-        AutomataFinito _AM_generarAutomata(list<tuple<int,string>>&,string);
+        AutomataFinito _AM_generarAutomata(list<tuple<int,string>>&,string,string);
+        AutomataFinito _VD_generarAutomata();
         list<string> _estadoConjunto(string);
         string _crearEstadoConjunto(list<string>&);
         Estado * estadoInicial;
         list<char> alfabeto;
-        void _copiarEstados(AutomataFinito second);
+        map<string,string> _copiarEstados(map<string,Estado*> second);
         map<string,Estado *> estados;
+        map<char, AutomataFinito> automatasElementales;
         string name;
+        bool minimo;
         bool determinista;
 };
 
-void AutomataFinito::addDestinos(string es, map<string,list<char>> desti){
+AutomataFinito AutomataFinito::generarAutomataElemental(char caracter){
+    AutomataFinito res;
+    string temp = caracter + to_string(res.size());
+    res.crearEstado(temp,false);
+    string temp2 = caracter + to_string(res.size());
+    res.crearEstado(temp2,true);
+    Estado * tt;
+    _existeEstado(temp,tt);
+    res._addCaracter(caracter);
+    res.crearRelacion(temp,temp2,caracter);
+    return res;
+}
+
+void AutomataFinito::_addDestinos(string es, map<string,list<char>>& desti,map<string,string>&nombres){
     for(auto iter = desti.begin(); iter != desti.end(); ++iter){
         for(char c : iter->second){
-            crearRelacion(es,iter->firts,c);
+            crearRelacion(es,nombres[iter->first],c);
         }
     }
 }
 
-void AutomataFinito::_copiarEstados(map<string,Estado*> estados){
-    for(auto iter = estados.begin(); iter != estados.begin(); ++iter){
-        string temp = name + to_string(estados.size());
-        iter->second->nombre = temp;
-        this->estados[temp] = iter->second;
+void AutomataFinito::addDestinos(string es, map<string,list<char>>& desti){
+    for(auto iter = desti.begin(); iter != desti.end(); ++iter){
+        for(char c : iter->second){
+            crearRelacion(es,iter->first,c);
+        }
     }
 }
 
-AutomataFinito AutomataFinito::uni(AutomataFinito second){
-    AutomataFinito res;
+map<string,string> AutomataFinito::_copiarEstados(map<string,Estado*> estados){
+    map<string,string> nombres;
+    map<string,Estado *> es;
+    for(auto iter = estados.begin(); iter != estados.end(); ++iter){
+        string temp = name + to_string(this->estados.size());
+        _crearEstado(temp,iter->second->aseptacion);
+        nombres[iter->second->nombre] = temp;
+        es[iter->second->nombre] = iter->second;
+    }
+    cout<<"W"<<nombres.size()<<endl;
+    cout<<"W"<<es.size()<<endl;
+    for(auto iter2 = nombres.begin(); iter2 != nombres.end(); ++iter2){
+        cout<<"ITERFIRST->"<<iter2->first<<endl;
+        cout<<"ITERSECOND->"<<iter2->second<<endl;
+        _addDestinos(iter2->second, es[iter2->first]->estadosDestino,nombres);
+    }
+    return nombres;
+}
+
+AutomataFinito AutomataFinito::uni(AutomataFinito &second,string n){
+    AutomataFinito res(n);
     res.crearAlfabeto(alfabeto);
-    string temp = name + to_string(res.estados.size());
-    res.crearEstado(temp,estadoInicial->aseptacion or second.estadoInicial->aseptacion);
-    res._copiarEstados(this->estados);
-    res._copiarEstados(second.estados);
-    res.addDestinos(res.estadoInicial,estadoInicial.estadosDestino);
-    res.addDestinos(res.estadoInicial,second.estadoInicial.estadosDestino);
+    for(char c : second.alfabeto){
+        res._addCaracter(c);
+    }
+    string temp = n + to_string(res.estados.size());
+    res._crearEstado(temp,estadoInicial->aseptacion or second.estadoInicial->aseptacion);
+    auto nombres1 = res._copiarEstados(this->estados);
+    auto nombres2 = res._copiarEstados(second.estados);
+    res._addDestinos(res.estadoInicial->nombre,estadoInicial->estadosDestino,nombres1);
+    res._addDestinos(res.estadoInicial->nombre,second.estadoInicial->estadosDestino,nombres2);
     return res;
 }
 
@@ -106,8 +147,17 @@ void AutomataFinito::cambiarEstadoInicial(string estado){
 
 void AutomataFinito::_recuperarTipoEstado(list<string> &finales, list<string> &noFinales){
     for(auto iter = estados.begin(); iter != estados.end(); ++iter){
-        if(iter->second->aseptacion)finales.push_back(iter->first);
-        else noFinales.push_back(iter->first);
+        if(iter->second->aseptacion){
+            Estado * temp;
+            _existeEstado(iter->first,temp);
+            if(!iter->second->estadosOrigen.empty() or temp == estadoInicial) finales.push_back(iter->first);
+        }
+        else
+        {
+            Estado * temp;
+            _existeEstado(iter->first,temp);
+            if(!iter->second->estadosOrigen.empty() or temp == estadoInicial) noFinales.push_back(iter->first);
+        }
     }
 }
 
@@ -121,7 +171,7 @@ list<string> AutomataFinito::_AM_generarParticiones(map<int,list<string>> result
 
 int AutomataFinito::_AM_buscarResultados(string estado, char caracter,list<tuple<int,string>> &candidatos){
     Estado * temp;
-    _existeEstado(estado,temp);
+    if(!_existeEstado(estado,temp))cout<<"NOEXISTO"<<endl;
     string resultado = temp->relaciones(caracter).front();
     const char * c_resultado = resultado.c_str();
     list<tuple<int,string>> estados;
@@ -139,8 +189,8 @@ int AutomataFinito::_AM_buscarResultados(string estado, char caracter,list<tuple
 }
 
 
-AutomataFinito AutomataFinito::_AM_generarAutomata(list<tuple<int,string>>& candidatos,string estadoInicial){
-    AutomataFinito nuevo;
+AutomataFinito AutomataFinito::_AM_generarAutomata(list<tuple<int,string>>& candidatos,string estadoInicial,string name){
+    AutomataFinito nuevo(name);
     nuevo.crearAlfabeto(alfabeto);
     map<string,list<string>> estadosConjunto;
     for(auto tuple_iter : candidatos){
@@ -169,10 +219,12 @@ AutomataFinito AutomataFinito::_AM_generarAutomata(list<tuple<int,string>>& cand
     }
     string estadoI = "[" + estadoInicial + "]";
     nuevo.cambiarEstadoInicial(estadoI);
+    nuevo.minimo = true;
     return nuevo;
 }
 
 AutomataFinito AutomataFinito::automataMinimo(){
+    if(!esDeterminista())return AutomataFinito(name);
     list<tuple<int,string>> candidatos;
     list<tuple<int,string>> candidatosSiguientes;
     list<string> estadosFinales;
@@ -191,6 +243,7 @@ AutomataFinito AutomataFinito::automataMinimo(){
             for(char c_iter : alfabeto){
                 resultados.clear();
                 for(string s_iter : sEstados){
+                    cout<<"SITER->"<<s_iter<<endl;
                     resultados[_AM_buscarResultados(s_iter,c_iter,candidatos)].push_back(s_iter);
                 }
                 if(resultados.size() > 1)break;
@@ -208,7 +261,7 @@ AutomataFinito AutomataFinito::automataMinimo(){
         }
         candidatos = candidatosSiguientes;
     }
-    return  _AM_generarAutomata(candidatosSiguientes,estadoInicial->nombre);
+    return  _AM_generarAutomata(candidatosSiguientes,estadoInicial->nombre,name);
 
 
 }
@@ -300,8 +353,54 @@ list<string> AutomataFinito::Estado::relaciones(char caracter){
     return resultado;
 }
 
+AutomataFinito AutomataFinito::_VD_generarAutomata(){
+    AutomataFinito res(name);
+    res.crearAlfabeto(alfabeto);
+    map<string,string> nombres;
+    map<string,Estado *> es;
+    string tt = estadoInicial->nombre;
+    if(tt[0] == '{'){
+        tt[0] = '[';
+        tt[tt.size() - 1] = ']';
+        for(int i = 0; i < tt.size(); i++){
+            if(tt[i] == ','){
+                tt[i] = ';';
+            }
+        }
+    }
+    res._crearEstado(tt,estadoInicial->aseptacion);
+    nombres[estadoInicial->nombre] = tt;
+    es[estadoInicial->nombre] = estadoInicial;
+    for(auto iter = estados.begin(); iter != estados.end(); ++iter){
+        if(iter->second != estadoInicial){
+            string temp = iter->second->nombre;
+            if(temp[0] == '{'){
+                temp[0] = '[';
+                temp[temp.size() - 1] = ']';
+                for(int i = 0; i < temp.size(); i++){
+                    if(temp[i] == ','){
+                        temp[i] = ';';
+                    }
+                }
+            }
+            res._crearEstado(temp,iter->second->aseptacion);
+            nombres[iter->second->nombre] = temp;
+            es[iter->second->nombre] = iter->second;
+        }
+    }
+    cout<<nombres.size()<<endl;
+    cout<<"FFFFFFFFFFFFFFFFFFFFF"<<endl;
+    for(auto iter2 = nombres.begin(); iter2 != nombres.end(); ++iter2){
+        cout<<"FFFF1->"<<iter2->first<<endl;
+        cout<<"FFFF2->"<<iter2->second<<endl;
+        cout<<"FFFF3->"<<es[iter2->first]->nombre<<endl;
+        res._addDestinos(iter2->second,es[iter2->first]->estadosDestino,nombres);
+    }
+    return res;
+}
+
 AutomataFinito AutomataFinito::volverDeterminista(){
-    AutomataFinito nuevo;
+    AutomataFinito nuevo(name);
     if(determinista or !estadoInicial){
         AutomataFinito det(estadoInicial,alfabeto,estados,name,determinista);
         return det;
@@ -350,7 +449,7 @@ AutomataFinito AutomataFinito::volverDeterminista(){
             ///cin>>t;
         }
     }
-    return nuevo;
+    return nuevo._VD_generarAutomata();
 }
 
 string AutomataFinito::Estado::transicionDeterminista(char caracter){
@@ -442,8 +541,15 @@ bool AutomataFinito::Estado::_existeRelacion(string name, char caracter){
     return false;
 }
 
+void AutomataFinito::_addCaracter(const char caracter){
+    if(find(alfabeto.begin(),alfabeto.end(),caracter) != alfabeto.end())return;
+    alfabeto.push_back(caracter);
+    determinista = esDeterminista();
+}
+
 void AutomataFinito::addCaracter(const char caracter){
     if(find(alfabeto.begin(),alfabeto.end(),caracter) != alfabeto.end())return;
+    automatasElementales[caracter] = generarAutomataElemental(caracter);
     alfabeto.push_back(caracter);
     determinista = esDeterminista();
 }
@@ -515,6 +621,7 @@ AutomataFinito::AutomataFinito(){
     estadoInicial = nullptr;
     determinista = false;
     name = "AutomataDefault";
+    minimo = false;
 }
 
 AutomataFinito::AutomataFinito(Estado * estadoInicial,list<char> alfabeto,map<string,Estado *> estados,string name,bool determinista){
@@ -523,12 +630,14 @@ AutomataFinito::AutomataFinito(Estado * estadoInicial,list<char> alfabeto,map<st
     this->estados = estados;
     this->name = name;
     this->determinista = determinista;
+    minimo = false;
 }
 
 AutomataFinito::AutomataFinito(string name){
     estadoInicial = nullptr;
     determinista = false;
     this->name = name;
+    minimo = false;
 }
 
 AutomataFinito::~AutomataFinito(){

@@ -100,8 +100,15 @@ int main()
 
     autito.print();
     cout<<autito.esDeterminista()<<endl;
-    AutomataFinito mini = autito.automataMinimo();
-    mini.print();
+    AutomataFinito mini = autito.generarAutomataElemental('1');
+    AutomataFinito mini2 = autito.generarAutomataElemental('1');
+    AutomataFinito mini4 = autito.generarAutomataElemental('2');
+    AutomataFinito mini5 = autito.generarAutomataElemental('2');
+
+    AutomataFinito mini3 = mini.uni(mini2,"unos");
+    AutomataFinito mini6 = mini4.uni(mini5,"dos");
+    AutomataFinito mini7 = mini3.uni(mini6,"com").volverDeterminista().automataMinimo();
+    mini7.print();
     /*
 
     AutomataFinito att = autito.volverDeterminista();

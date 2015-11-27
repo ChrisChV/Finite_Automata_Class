@@ -1,0 +1,12 @@
+digraph{
+0 [label="unos0"color = "black"];
+0->2 [label="1"];
+0->4 [label="1"];
+1 [label="unos1"color = "black"];
+1->2 [label="1"];
+2 [label="unos2"color = "red"];
+3 [label="unos3"color = "black"];
+3->4 [label="1"];
+4 [label="unos4"color = "red"];
+0 [label = "unos0"color = "green"];
+}
