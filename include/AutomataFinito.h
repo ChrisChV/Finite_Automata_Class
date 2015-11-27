@@ -38,9 +38,9 @@ class AutomataFinito
         bool algunoEsAseptacion(list<string> &);
         bool esDeterminista();
         void addCaracter(const char);
-        void addDestinos(string, map<string,list<char>>&);
         void _addDestinos(string, map<string,list<char>>&,map<string,string>&);
         AutomataFinito uni(AutomataFinito &second,string);
+        AutomataFinito concat(AutomataFinito &second, string);
         bool verificarCadena(string);
         AutomataFinito volverDeterminista();
         AutomataFinito automataMinimo();
@@ -69,12 +69,44 @@ class AutomataFinito
         Estado * estadoInicial;
         list<char> alfabeto;
         map<string,string> _copiarEstados(map<string,Estado*> second);
+        map<string,string> __copiarEstados(map<string,Estado*> second);
         map<string,Estado *> estados;
         map<char, AutomataFinito> automatasElementales;
         string name;
         bool minimo;
         bool determinista;
 };
+
+AutomataFinito AutomataFinito::concat(AutomataFinito &second,  string n){
+    AutomataFinito res(n);
+    ///CREARALFABETO PENDEJO
+
+
+
+    return res;
+}
+
+
+map<string,string> AutomataFinito::__copiarEstados(map<string,Estado*> second){
+    map<string,string> nombres;
+    map<string,Estado *> es;
+    string tt = name + to_string(this->estados.size());
+    _crearEstado(tt,estadoInicial->aseptacion);
+    nombres[estadoInicial->nombre] = tt;
+    es[estadoInicial->nombre] = estadoInicial;
+    for(auto iter = estados.begin(); iter != estados.end(); ++iter){
+        if(iter->second != estadoInicial){
+            string temp = name + to_string(this->estados.size());
+            _crearEstado(temp,iter->second->aseptacion);
+            nombres[iter->second->nombre] = temp;
+            es[iter->second->nombre] = iter->second;
+        }
+    }
+    for(auto iter2 = nombres.begin(); iter2 != nombres.end(); ++iter2){
+        _addDestinos(iter2->second,es[iter2->first]->estadosDestino,nombres);
+    }
+    return nombres;
+}
 
 AutomataFinito AutomataFinito::generarAutomataElemental(char caracter){
     AutomataFinito res;
@@ -97,13 +129,6 @@ void AutomataFinito::_addDestinos(string es, map<string,list<char>>& desti,map<s
     }
 }
 
-void AutomataFinito::addDestinos(string es, map<string,list<char>>& desti){
-    for(auto iter = desti.begin(); iter != desti.end(); ++iter){
-        for(char c : iter->second){
-            crearRelacion(es,iter->first,c);
-        }
-    }
-}
 
 map<string,string> AutomataFinito::_copiarEstados(map<string,Estado*> estados){
     map<string,string> nombres;
