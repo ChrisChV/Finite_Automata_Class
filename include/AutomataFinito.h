@@ -21,6 +21,7 @@ class AutomataFinito
                 bool _existeRelacion(string, char);
                 string transicionDeterminista(char);
                 bool verificarCaracter(char);
+
                 list<string> relaciones(char);
                 string nombre;
                 bool aseptacion;
@@ -37,6 +38,8 @@ class AutomataFinito
         bool algunoEsAseptacion(list<string> &);
         bool esDeterminista();
         void addCaracter(const char);
+        void addDestinos(string, map<string,list<char>>);
+        AutomataFinito uni(AutomataFinito &second);
         bool verificarCadena(string);
         AutomataFinito volverDeterminista();
         AutomataFinito automataMinimo();
@@ -61,10 +64,39 @@ class AutomataFinito
         string _crearEstadoConjunto(list<string>&);
         Estado * estadoInicial;
         list<char> alfabeto;
+        void _copiarEstados(AutomataFinito second);
         map<string,Estado *> estados;
         string name;
         bool determinista;
 };
+
+void AutomataFinito::addDestinos(string es, map<string,list<char>> desti){
+    for(auto iter = desti.begin(); iter != desti.end(); ++iter){
+        for(char c : iter->second){
+            crearRelacion(es,iter->firts,c);
+        }
+    }
+}
+
+void AutomataFinito::_copiarEstados(map<string,Estado*> estados){
+    for(auto iter = estados.begin(); iter != estados.begin(); ++iter){
+        string temp = name + to_string(estados.size());
+        iter->second->nombre = temp;
+        this->estados[temp] = iter->second;
+    }
+}
+
+AutomataFinito AutomataFinito::uni(AutomataFinito second){
+    AutomataFinito res;
+    res.crearAlfabeto(alfabeto);
+    string temp = name + to_string(res.estados.size());
+    res.crearEstado(temp,estadoInicial->aseptacion or second.estadoInicial->aseptacion);
+    res._copiarEstados(this->estados);
+    res._copiarEstados(second.estados);
+    res.addDestinos(res.estadoInicial,estadoInicial.estadosDestino);
+    res.addDestinos(res.estadoInicial,second.estadoInicial.estadosDestino);
+    return res;
+}
 
 void AutomataFinito::cambiarEstadoInicial(string estado){
     Estado * temp;
