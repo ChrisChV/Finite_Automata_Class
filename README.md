@@ -4,7 +4,9 @@ Producido y Financiado por Chris Chávez AK XNPIO
 La funcion principal del programa es generar un autómata que reconozca una expresion regular dada.
 
 CREACION MANUAL DE UNA AUTOMATA
+
     CONSTRUCTOR
+    
         Se puede inicializar de dos formas:
         
           AutomataFinito autito //De esta forma se inicializa el automata con nombre "AutomataDefault";
@@ -12,14 +14,16 @@ CREACION MANUAL DE UNA AUTOMATA
           
         IMPORTANTE: Poner siempre nombre a los automatas, y que al realizar las operaciones entre automatas es mejor
         que sus nombres sean diferentes.
+        
     CREAR ESTADOS
         Se puede crear estados de dos formas:
         
           autito.crearEstado("1") //Se crea un estado de no aseptacion con nombre "1";
-          autito.crearEstado("1",true) //Se crea un estado con nombre "1" que es de asptacion si el segundo parametro es true.
+          autito.crearEstado("1",true) //Se crea un estado con nombre "1" que es de asptacion si el segundo parametro                                          es true.
           
         Si el nombre del estado se repite en el automata, el nuevo estado repetido no se crea.
     CREAR ALFABETO
+    
         Se puede crear el alfabeto de dos formas:
         
           autito.crearAlfabeto(alfabeto) //Donde alfabeto es un list<char>
