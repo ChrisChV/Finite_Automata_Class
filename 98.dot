@@ -1,0 +1,9 @@
+digraph{
+0 [label="980"color = "red"];
+0->2 [label="b"];
+1 [label="981"color = "black"];
+1->2 [label="b"];
+2 [label="982"color = "red"];
+2->2 [label="b"];
+0 [label = "980"color = "blue"];
+}

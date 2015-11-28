@@ -101,15 +101,60 @@ int main()
     autito.print();
     cout<<autito.esDeterminista()<<endl;
 
+    AutomataFinito autito2("autito");
+    autito2.addCaracter('a');
+    autito2.addCaracter('b');
+    AutomataFinito resultado = autito2.generarDeExpresionRegular("(a*abab(aba)*)V(b*Va)","autito");
+    resultado.print();
+
+    ///TESTING
+    ///ab OK
+    ///a*b OK
+    ///a*b* OK
+    ///a+b+ OK
+    ///(ab)* OK
+    ///(a*Vb*) OK
+    ///a(a*Vb*) OK
+    ///(a*abab(aba)*)V(b*Va) OK
+
+    ///AUTOMATA SALVAJE TENGO PREGUNTAS
+    /*
+    AutomataFinito mini = autito.generarAutomataElemental('b').sumitaDeKleene();
+    AutomataFinito mini2 = autito.generarAutomataElemental('a').sumitaDeKleene();
+    AutomataFinito mini3 = mini.uni(mini2, "uni");
+    AutomataFinito mini4 = autito.generarAutomataElemental('a');
+    AutomataFinito mini5 = mini4.concat(mini3, "result").reverso().volverDeterminista().automataMinimo();
+    mini5.print();
+    */
+
+    /*
+    AutomataFinito mini = autito.generarAutomataElemental('a');
+    AutomataFinito mini2 = autito.generarAutomataElemental('b');
+
+    AutomataFinito mini3 = mini.concat(mini2, "sumita");
+    AutomataFinito mini4 = mini3.sumitaDeKleene().volverDeterminista().automataMinimo();
+    mini4.print();
+    */
+
+    /*
+    AutomataFinito mini3 = mini.concat(mini2,"kleene");
+    AutomataFinito mini4 = mini3.estrellitaDeKleene().volverDeterminista().automataMinimo();
+    mini4.print();
+    */
+
+    /*
     AutomataFinito mini = autito.generarAutomataElemental('1');
     AutomataFinito mini2 = autito.generarAutomataElemental('1');
     AutomataFinito mini3 = autito.generarAutomataElemental('2');
     AutomataFinito mini4 = autito.generarAutomataElemental('2');
+    */
 
+    /*
     AutomataFinito mini5 = mini.concat(mini2,"unos");
     AutomataFinito mini6 = mini3.concat(mini4,"doses");
     AutomataFinito mini7 = mini5.concat(mini6, "com").volverDeterminista().automataMinimo();
     mini7.print();
+    */
 
     /*
     AutomataFinito mini5 = mini.uni(mini2,"unos");

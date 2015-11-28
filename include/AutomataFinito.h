@@ -39,16 +39,22 @@ class AutomataFinito
         bool esDeterminista();
         void addCaracter(const char);
         void _addDestinos(string, map<string,list<char>>&,map<string,string>&);
-        AutomataFinito uni(AutomataFinito &second,string);
-        AutomataFinito concat(AutomataFinito &second, string);
-        AutomataFinito estrellitaDeHleene(AutomataFinito &second, string);
+        AutomataFinito uni(AutomataFinito second,string);
+        AutomataFinito concat(AutomataFinito second, string);
+        AutomataFinito estrellitaDeKleene();
+        AutomataFinito sumitaDeKleene();
+        AutomataFinito cambiarNombre(string name);
         bool verificarCadena(string);
         AutomataFinito volverDeterminista();
         AutomataFinito automataMinimo();
         AutomataFinito generarAutomataElemental(char);
+        AutomataFinito reverso();
+        AutomataFinito generarDeExpresionRegular(string expresion, string name);
+        void complemento();
         int size();
         bool empty();
         void print();
+        string name;
         bool crearRelacion(string, string, char);
         map<string,Estado *>& getEstados();
         virtual ~AutomataFinito();
@@ -62,6 +68,7 @@ class AutomataFinito
         void _addCaracter(const char);
         void _recuperarTipoEstado(list<string> &, list<string> &);
         int _AM_buscarResultados(string, char,list<tuple<int,string>> &);
+        AutomataFinito _generarDeExpresionRegular(string expresion, int& posicion, int& operaciones, string name);
         list<string> _AM_generarParticiones(map<int,list<string>>);
         AutomataFinito _AM_generarAutomata(list<tuple<int,string>>&,string,string);
         AutomataFinito _VD_generarAutomata();
@@ -73,13 +80,618 @@ class AutomataFinito
         map<string,string> __copiarEstados(map<string,Estado*> second, Estado * estadoInicial);
         map<string,Estado *> estados;
         map<char, AutomataFinito> automatasElementales;
-        string name;
         bool minimo;
         bool determinista;
 };
 
+AutomataFinito AutomataFinito::cambiarNombre(string name){
+    AutomataFinito res(name);
+    res.crearAlfabeto(alfabeto);
+    res.__copiarEstados(estados,estadoInicial);
+    return res;
+}
 
-AutomataFinito AutomataFinito::concat(AutomataFinito &second,  string n){
+AutomataFinito AutomataFinito::_generarDeExpresionRegular(string expresion, int& i, int& operaciones, string name){
+    AutomataFinito res;
+    int estado = 0;
+    i++;
+    for(i; i < expresion.size(); i++){
+        switch(estado){
+            case 0:
+                if(expresion[i] == '('){
+                    string na = name + to_string(operaciones);
+                    operaciones++;
+                    res = res.concat(_generarDeExpresionRegular(expresion,i,operaciones,name),na);
+                    estado = 2;
+                }
+                else if(expresion[i] == ')'){
+                    if(i + 1 < expresion.size() and find(alfabeto.begin(),alfabeto.end(),expresion[i + 1]) == alfabeto.end() and expresion[i + 1] != ')'  and expresion[i + 1] != '(' and expresion[i + 1] != 'V'){
+                        if(expresion[i + 1] == '+'){
+                            operaciones++;
+                            res = res.sumitaDeKleene();
+                        }
+                        else if(expresion[i + 1] == '*'){
+                            operaciones++;
+                            res = res.estrellitaDeKleene();
+                        }
+                        else if(expresion[i + 1] == '-'){
+                            operaciones++;
+                            res = res.reverso();
+                        }
+                        else{
+                            string h = "El Caracter ";
+                            h.insert(h.end(),+ expresion[i + 1]);
+                            string e = h + " no es un caracter reconosible";
+                            throw(e);
+                        }
+                        i++;
+
+                    }
+                    return res;
+                }
+                else if(find(alfabeto.begin(),alfabeto.end(),expresion[i]) == alfabeto.end()){
+                    string e;
+                    if(expresion[i] == '*' or expresion[i] == '+' or expresion[i] == '-'){
+                        string h = "Error de sintaxis. La operacion ";
+                        h.insert(h.end(),expresion[i]);
+                        e = h + " no se puede ejecutar";
+                    }
+                    else{
+                        string h = "El Caracter ";
+                        h.insert(h.end(),expresion[i]);
+                        e = h + " no se encuentra en el alfabeto del automata " + name;
+                    }
+                    throw(e);
+                }
+                else{
+                    res = automatasElementales[expresion[i]];
+                    estado = 1;
+                }
+                break;
+            case 1:
+                if(expresion[i] == '+'){
+                    res = res.sumitaDeKleene();
+                    operaciones++;
+                    estado = 2;
+                }
+                else if(expresion[i] == '*'){
+                    res = res.estrellitaDeKleene();
+                    operaciones++;
+                    estado = 2;
+                }
+                else if(expresion[i] == '-'){
+                    res = res.reverso();
+                    operaciones++;
+                    estado = 2;
+                }
+                else if(expresion[i] == 'V'){
+                    estado = 3;
+                }
+                else if(expresion[i] == '('){
+                    string na = name + to_string(operaciones);
+                    operaciones++;
+                    res = res.concat(_generarDeExpresionRegular(expresion,i,operaciones,name),na);
+                    estado = 2;
+                }
+                else if(expresion[i] == ')'){
+                    if(i + 1 < expresion.size() and find(alfabeto.begin(),alfabeto.end(),expresion[i + 1]) == alfabeto.end() and expresion[i + 1] != ')'  and expresion[i + 1] != '('  and expresion[i + 1] != 'V'){
+                        if(expresion[i + 1] == '+'){
+                            operaciones++;
+                            res = res.sumitaDeKleene();
+                        }
+                        else if(expresion[i + 1] == '*'){
+                            operaciones++;
+                            res = res.estrellitaDeKleene();
+                        }
+                        else if(expresion[i + 1] == '-'){
+                            operaciones++;
+                            res = res.reverso();
+                        }
+                        else{
+                            string h = "El Caracter ";
+                            h.insert(h.end(),+ expresion[i + 1]);
+                            string e = h + " no es un caracter reconosible";
+                            throw(e);
+                        }
+                        i++;
+                    }
+                    return res;
+                }
+                else if(find(alfabeto.begin(),alfabeto.end(),expresion[i]) == alfabeto.end()){
+                    string h = "El Caracter ";
+                    h.insert(h.end(),expresion[i]);
+                    string e =  h + " no se encuentra en el alfabeto del automata " + name;
+                    throw(e);
+                }
+                else{
+                    if(i + 1 < expresion.size() and find(alfabeto.begin(),alfabeto.end(),expresion[i + 1]) == alfabeto.end() and expresion[i + 1] != ')'  and expresion[i + 1] != '('  and expresion[i + 1] != 'V'){
+                        if(expresion[i + 1] == '+'){
+                            string na = name + to_string(operaciones);
+                            operaciones++;
+                            res = res.concat(automatasElementales[expresion[i]].sumitaDeKleene(),na);
+                        }
+                        else if(expresion[i + 1] == '*'){
+                            string na = name + to_string(operaciones);
+                            operaciones++;
+                            res = res.concat(automatasElementales[expresion[i]].estrellitaDeKleene(),na);
+                        }
+                        else if(expresion[i + 1] == '-'){
+                            string na = name + to_string(operaciones);
+                            operaciones++;
+                            res = res.concat(automatasElementales[expresion[i]].reverso(),na);
+                        }
+                        else{
+                            string h = "El Caracter ";
+                            h.insert(h.end(),+ expresion[i + 1]);
+                            string e = h + " no es un caracter reconosible";
+                            throw(e);
+                        }
+                        i++;
+                    }
+                    else{
+                        string na = name + to_string(operaciones);
+                        operaciones++;
+                        res = res.concat(automatasElementales[expresion[i]],na);
+                    }
+                    estado = 2;
+                }
+                break;
+            case 2:
+                if(expresion[i] == 'V'){
+                    estado = 3;
+                }
+                else if(expresion[i] == '('){
+                    string na = name + to_string(operaciones);
+                    operaciones++;
+                    res = res.concat(_generarDeExpresionRegular(expresion,i,operaciones,name),na);
+                    estado = 2;
+                }
+                else if(expresion[i] == ')'){
+                    if(i + 1 < expresion.size() and find(alfabeto.begin(),alfabeto.end(),expresion[i + 1]) == alfabeto.end() and expresion[i + 1] != ')'  and expresion[i + 1] != '('  and expresion[i + 1] != 'V'){
+                        if(expresion[i + 1] == '+'){
+                            operaciones++;
+                            res = res.sumitaDeKleene();
+                        }
+                        else if(expresion[i + 1] == '*'){
+                            operaciones++;
+                            res = res.estrellitaDeKleene();
+                        }
+                        else if(expresion[i + 1] == '-'){
+                            operaciones++;
+                            res = res.reverso();
+                        }
+                        else{
+                            string h = "El Caracter ";
+                            h.insert(h.end(),+ expresion[i + 1]);
+                            string e = h + " no es un caracter reconosible";
+                            throw(e);
+                        }
+                        i++;
+                    }
+                    return res;
+                }
+                else if(find(alfabeto.begin(),alfabeto.end(),expresion[i]) == alfabeto.end()){
+                    string e;
+                    if(expresion[i] == '*' or expresion[i] == '+' or expresion[i] == '-'){
+                        string h = "Error de sintaxis. La operacion ";
+                            h.insert(h.end(),expresion[i]);
+                            e = h + " no se puede ejecutar";
+                        }
+                    else{
+                        string h = "El Caracter ";
+                        h.insert(h.end(),expresion[i]);
+                        e = h + " no se encuentra en el alfabeto del automata " + name;
+                    }
+                    throw(e);
+                }
+                else{
+                    if(i + 1 < expresion.size() and find(alfabeto.begin(),alfabeto.end(),expresion[i + 1]) == alfabeto.end() and expresion[i + 1] != ')' and expresion[i + 1] != '('  and expresion[i + 1] != 'V'){
+                        if(expresion[i + 1] == '+'){
+                            string na = name + to_string(operaciones);
+                            operaciones++;
+                            res = res.concat(automatasElementales[expresion[i]].sumitaDeKleene(),na);
+                        }
+                        else if(expresion[i + 1] == '*'){
+                            string na = name + to_string(operaciones);
+                            operaciones++;
+                            res = res.concat(automatasElementales[expresion[i]].estrellitaDeKleene(),na);
+                        }
+                        else if(expresion[i + 1] == '-'){
+                            string na = name + to_string(operaciones);
+                            operaciones++;
+                            res = res.concat(automatasElementales[expresion[i]].reverso(),na);
+                        }
+                        else{
+                            string h = "El Caracter ";
+                            h.insert(h.end(),+ expresion[i + 1]);
+                            string e = h + " no es un caracter reconosible";
+                            throw(e);
+                        }
+                        i++;
+                    }
+                    else{
+                        string na = name + to_string(operaciones);
+                        operaciones++;
+                        res = res.concat(automatasElementales[expresion[i]],na);
+                    }
+                }
+                break;
+            case 3:
+                if(expresion[i] == '('){
+                    string na = name + to_string(operaciones);
+                    operaciones++;
+                    res = res.uni(_generarDeExpresionRegular(expresion,i,operaciones,name),na);
+                    estado = 2;
+                }
+                else if(expresion[i] == ')'){
+                    if(i + 1 < expresion.size() and find(alfabeto.begin(),alfabeto.end(),expresion[i + 1]) == alfabeto.end()  and expresion[i + 1] != ')'  and expresion[i + 1] != '('  and expresion[i + 1] != 'V'){
+                        if(expresion[i + 1] == '+'){
+                            operaciones++;
+                            res = res.sumitaDeKleene();
+                        }
+                        else if(expresion[i + 1] == '*'){
+                            operaciones++;
+                            res = res.estrellitaDeKleene();
+                        }
+                        else if(expresion[i + 1] == '-'){
+                            operaciones++;
+                            res = res.reverso();
+                        }
+                        else{
+                            string h = "El Caracter ";
+                            h.insert(h.end(),+ expresion[i + 1]);
+                            string e = h + " no es un caracter reconosible";
+                            throw(e);
+                        }
+                        i++;
+                    }
+                    return res;
+                }
+                else if(find(alfabeto.begin(),alfabeto.end(),expresion[i]) == alfabeto.end()){
+                    string e;
+                    if(expresion[i] == '*' or expresion[i] == '+' or expresion[i] == '-' or expresion[i] == 'u'){
+                        string h = "Error de sintaxis. La operacion ";
+                            h.insert(h.end(),expresion[i]);
+                            e = h + " no se puede ejecutar";
+                        }
+                    else{
+                        string h = "El Caracter ";
+                        h.insert(h.end(),expresion[i]);
+                        e = h + " no se encuentra en el alfabeto del automata " + name;
+                    }
+                    throw(e);
+                }
+                else{
+                    if(i + 1 < expresion.size() and find(alfabeto.begin(),alfabeto.end(),expresion[i + 1]) == alfabeto.end()  and expresion[i + 1] != ')'  and expresion[i + 1] != '('  and expresion[i + 1] != 'V'){
+                        if(expresion[i + 1] == '+'){
+                            string na = name + to_string(operaciones);
+                            operaciones++;
+                            res = res.uni(automatasElementales[expresion[i]].sumitaDeKleene(),na);
+                        }
+                        else if(expresion[i + 1] == '*'){
+                            string na = name + to_string(operaciones);
+                            operaciones++;
+                            res = res.uni(automatasElementales[expresion[i]].estrellitaDeKleene(),na);
+                        }
+                        else if(expresion[i + 1] == '-'){
+                            string na = name + to_string(operaciones);
+                            operaciones++;
+                            res = res.uni(automatasElementales[expresion[i]].reverso(),na);
+                        }
+                        else{
+                            string h = "El Caracter ";
+                            h.insert(h.end(),+ expresion[i + 1]);
+                            string e = h + " no es un caracter reconosible";
+                            throw(e);
+                        }
+                        i++;
+                    }
+                    else{
+                        string na = name + to_string(operaciones);
+                        operaciones++;
+                        res = res.uni(automatasElementales[expresion[i]],na);
+                    }
+                }
+                break;
+        }
+    }
+    string e = "Error de sintasix. Le falta cerrar )";
+    throw(e);
+}
+
+AutomataFinito AutomataFinito::generarDeExpresionRegular(string expresion, string name){
+    AutomataFinito res;
+    int operaciones = 0;
+    int estado = 0;
+    int i;
+    try{
+        for(i = 0; i < expresion.size(); i++){
+            switch(estado){
+                case 0:
+                    if(expresion[i] == '('){
+                        list<char> al = alfabeto;
+                        res = _generarDeExpresionRegular(expresion,i,operaciones,name);
+                        estado = 2;
+                    }
+                    else if(expresion[i] == ')'){
+                        string e = "Error de sintaxis. Le falta cerrar abrir (";
+                        throw(e);
+                    }
+                    else if(find(alfabeto.begin(),alfabeto.end(),expresion[i]) == alfabeto.end()){
+                        string e;
+                        if(expresion[i] == '*' or expresion[i] == '+' or expresion[i] == '-'){
+                            string h = "Error de sintaxis. La operacion ";
+                            h.insert(h.end(),expresion[i]);
+                            e = h + " no se puede ejecutar";
+                        }
+                        else{
+                            string h = "El Caracter ";
+                            h.insert(h.end(),expresion[i]);
+                            e = h + " no se encuentra en el alfabeto del automata " + name;
+                        }
+                        throw(e);
+                    }
+                    else{
+                        res = automatasElementales[expresion[i]];
+                        estado = 1;
+                    }
+                    break;
+                case 1:
+                    if(expresion[i] == '+'){
+                        res = res.sumitaDeKleene();
+                        operaciones++;
+                        estado = 2;
+                    }
+                    else if(expresion[i] == '*'){
+                        res = res.estrellitaDeKleene();
+                        operaciones++;
+                        estado = 2;
+                    }
+                    else if(expresion[i] == '-'){
+                        res = res.reverso();
+                        operaciones++;
+                        estado = 2;
+                    }
+                    else if(expresion[i] == 'V'){
+                        estado = 3;
+                    }
+                    else if(expresion[i] == '('){
+                        string na = name + to_string(operaciones);
+                        operaciones++;
+                        res = res.concat(_generarDeExpresionRegular(expresion,i,operaciones,name),na);
+                        estado = 2;
+                    }
+                    else if(expresion[i] == ')'){
+                        string e = "Error de sintaxis. Le falta cerrar abrir (";
+                        throw(e);
+                    }
+                    else if(find(alfabeto.begin(),alfabeto.end(),expresion[i]) == alfabeto.end()){
+                        string h = "El Caracter ";
+                        h.insert(h.end(),expresion[i]);
+                        string e =  h + " no se encuentra en el alfabeto del automata " + name;
+                        throw(e);
+                    }
+                    else{
+                        if(i + 1 < expresion.size() and find(alfabeto.begin(),alfabeto.end(),expresion[i + 1]) == alfabeto.end()  and expresion[i + 1] != 'V'){
+                            if(expresion[i + 1] == '+'){
+                                string na = name + to_string(operaciones);
+                                operaciones++;
+                                res = res.concat(automatasElementales[expresion[i]].sumitaDeKleene(),na);
+                            }
+                            else if(expresion[i + 1] == '*'){
+                                string na = name + to_string(operaciones);
+                                operaciones++;
+                                res = res.concat(automatasElementales[expresion[i]].estrellitaDeKleene(),na);
+                            }
+                            else if(expresion[i + 1] == '-'){
+                                string na = name + to_string(operaciones);
+                                operaciones++;
+                                res = res.concat(automatasElementales[expresion[i]].reverso(),na);
+                            }
+                            else{
+                                string h = "El Caracter ";
+                                h.insert(h.end(),+ expresion[i + 1]);
+                                string e = h + " no es un caracter reconosible";
+                                throw(e);
+                            }
+                            i++;
+                        }
+                        else{
+                            string na = name + to_string(operaciones);
+                            operaciones++;
+                            res = res.concat(automatasElementales[expresion[i]],na);
+                        }
+                        estado = 2;
+                    }
+                    break;
+                case 2:
+                    if(expresion[i] == 'V'){
+                        estado = 3;
+                    }
+                    else if(expresion[i] == '('){
+                        string na = name + to_string(operaciones);
+                        operaciones++;
+                        res = res.concat(_generarDeExpresionRegular(expresion,i,operaciones,name),na);
+                        estado = 2;
+                    }
+                    else if(expresion[i] == ')'){
+                        string e = "Error de sintaxis. Le falta cerrar abrir (";
+                        throw(e);
+                    }
+                    else if(find(alfabeto.begin(),alfabeto.end(),expresion[i]) == alfabeto.end()){
+                        string e;
+                        if(expresion[i] == '*' or expresion[i] == '+' or expresion[i] == '-'){
+                            string h = "Error de sintaxis. La operacion ";
+                            h.insert(h.end(),expresion[i]);
+                            e = h + " no se puede ejecutar";
+                        }
+                        else{
+                            string h = "El Caracter ";
+                            h.insert(h.end(),expresion[i]);
+                            e = h + " no se encuentra en el alfabeto del automata " + name;
+                        }
+                        throw(e);
+                    }
+                    else{
+                        if(i + 1 < expresion.size() and find(alfabeto.begin(),alfabeto.end(),expresion[i + 1]) == alfabeto.end() and expresion[i + 1] != 'V'){
+                            if(expresion[i + 1] == '+'){
+                                string na = name + to_string(operaciones);
+                                operaciones++;
+                                res = res.concat(automatasElementales[expresion[i]].sumitaDeKleene(),na);
+                            }
+                            else if(expresion[i + 1] == '*'){
+                                string na = name + to_string(operaciones);
+                                operaciones++;
+                                res = res.concat(automatasElementales[expresion[i]].estrellitaDeKleene(),na);
+                            }
+                            else if(expresion[i + 1] == '-'){
+                                string na = name + to_string(operaciones);
+                                operaciones++;
+                                res = res.concat(automatasElementales[expresion[i]].reverso(),na);
+                            }
+                            else{
+                                string h = "El Caracter ";
+                                h.insert(h.end(),+ expresion[i + 1]);
+                                string e = h + " no es un caracter reconosible";
+                                throw(e);
+                            }
+                            i++;
+                        }
+                        else{
+                            string na = name + to_string(operaciones);
+                            operaciones++;
+                            res = res.concat(automatasElementales[expresion[i]],na);
+                        }
+                    }
+                    break;
+                case 3:
+                    if(expresion[i] == '('){
+                        string na = name + to_string(operaciones);
+                        operaciones++;
+                        res = res.uni(_generarDeExpresionRegular(expresion,i,operaciones,name),na);
+                        estado = 2;
+                    }
+                    else if(expresion[i] == ')'){
+                        string e = "Error de sintaxis. Le falta cerrar abrir (";
+                        throw(e);
+                    }
+                    else if(find(alfabeto.begin(),alfabeto.end(),expresion[i]) == alfabeto.end()){
+                        string e;
+                        if(expresion[i] == '*' or expresion[i] == '+' or expresion[i] == '-' or expresion[i] == 'u'){
+                            string h = "Error de sintaxis. La operacion ";
+                            h.insert(h.end(),expresion[i]);
+                            e = h + " no se puede ejecutar";
+                        }
+                        else{
+                            string h = "El Caracter ";
+                            h.insert(h.end(),expresion[i]);
+                            e = h + " no se encuentra en el alfabeto del automata " + name;
+                        }
+                        throw(e);
+                    }
+                    else{
+                        if(i + 1 < expresion.size() and find(alfabeto.begin(),alfabeto.end(),expresion[i + 1]) == alfabeto.end() and expresion[i + 1] != 'V'){
+                            if(expresion[i + 1] == '+'){
+                                string na = name + to_string(operaciones);
+                                operaciones++;
+                                res = res.uni(automatasElementales[expresion[i]].sumitaDeKleene(),na);
+                            }
+                            else if(expresion[i + 1] == '*'){
+                                string na = name + to_string(operaciones);
+                                operaciones++;
+                                res = res.uni(automatasElementales[expresion[i]].estrellitaDeKleene(),na);
+                            }
+                            else if(expresion[i + 1] == '-'){
+                                string na = name + to_string(operaciones);
+                                operaciones++;
+                                res = res.uni(automatasElementales[expresion[i]].reverso(),na);
+                            }
+                            else{
+                                string h = "El Caracter ";
+                                h.insert(h.end(),+ expresion[i + 1]);
+                                string e = h + " no es un caracter reconosible";
+                                throw(e);
+                            }
+                            i++;
+                        }
+                        else{
+                            string na = name + to_string(operaciones);
+                            operaciones++;
+                            res = res.uni(automatasElementales[expresion[i]],na);
+                        }
+                    }
+                    break;
+            }
+        }
+        return res.cambiarNombre(name).volverDeterminista().automataMinimo();
+    }
+    catch(string e){cout<<e<<endl;}
+}
+
+void AutomataFinito::complemento(){
+    if(!esDeterminista())return;
+    for(auto iter = estados.begin(); iter != estados.end(); ++iter){
+        iter->second->aseptacion = !iter->second->aseptacion;
+    }
+}
+
+AutomataFinito AutomataFinito::reverso(){
+    AutomataFinito res(name);
+    res.crearAlfabeto(alfabeto);
+    Estado * anteriorAsep;
+    map<string,string> nombres;
+    string tt = name + to_string(res.size());
+    res._crearEstado(tt,estadoInicial->aseptacion);
+    for(auto iter = estados.begin(); iter != estados.end(); ++iter){
+        string temp = name + to_string(res.size());
+        res._crearEstado(temp,iter->second->aseptacion);
+        nombres[iter->second->nombre] = temp;
+        if(iter->second == estadoInicial){
+            res._existeEstado(temp,anteriorAsep);
+        }
+    }
+    for(auto iter = estados.begin(); iter != estados.end(); ++iter){
+        for(auto iter2 = iter->second->estadosOrigen.begin(); iter2 != iter->second->estadosOrigen.end(); ++iter2){
+            for(char c : iter2->second){
+                res.crearRelacion(nombres[iter->first],nombres[iter2->first],c);
+            }
+        }
+    }
+    for(auto iter = res.estados.begin(); iter != res.estados.end(); ++iter){
+        if(iter->second != res.estadoInicial and iter->second->aseptacion){
+            for(auto iter2 = iter->second->estadosDestino.begin(); iter2 != iter->second->estadosDestino.end(); ++iter2){
+                for(char c : iter2->second){
+                    res.crearRelacion(res.estadoInicial->nombre,iter2->first,c);
+                }
+            }
+            iter->second->aseptacion = false;
+        }
+    }
+    anteriorAsep->aseptacion = true;
+    return res;
+}
+
+AutomataFinito AutomataFinito::sumitaDeKleene(){
+    AutomataFinito res = estrellitaDeKleene();
+    res.estadoInicial->aseptacion = false;
+    return res;
+}
+
+AutomataFinito AutomataFinito::estrellitaDeKleene(){
+    AutomataFinito res(name);
+    res.crearAlfabeto(alfabeto);
+    string n = name + to_string(res.size());
+    res._crearEstado(n,true);
+    auto nombres = res._copiarEstados(estados);
+    for(auto iter = res.estados.begin(); iter != res.estados.end(); ++iter){
+        if(iter->second->aseptacion){
+            res._addDestinos(iter->first,estadoInicial->estadosDestino,nombres);
+        }
+    }
+    return res;
+}
+
+AutomataFinito AutomataFinito::concat(AutomataFinito second,  string n){
     AutomataFinito res(n);
     res.crearAlfabeto(alfabeto);
     for(char c : second.alfabeto){
@@ -126,7 +738,7 @@ map<string,string> AutomataFinito::__copiarEstados(map<string,Estado*> estados, 
 }
 
 AutomataFinito AutomataFinito::generarAutomataElemental(char caracter){
-    AutomataFinito res;
+    AutomataFinito res(to_string(caracter));
     string temp = caracter + to_string(res.size());
     res.crearEstado(temp,false);
     string temp2 = caracter + to_string(res.size());
@@ -166,7 +778,7 @@ map<string,string> AutomataFinito::_copiarEstados(map<string,Estado*> estados){
     return nombres;
 }
 
-AutomataFinito AutomataFinito::uni(AutomataFinito &second,string n){
+AutomataFinito AutomataFinito::uni(AutomataFinito second,string n){
     AutomataFinito res(n);
     res.crearAlfabeto(alfabeto);
     for(char c : second.alfabeto){
