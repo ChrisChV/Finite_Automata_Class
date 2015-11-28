@@ -41,6 +41,7 @@ class AutomataFinito
         void _addDestinos(string, map<string,list<char>>&,map<string,string>&);
         AutomataFinito uni(AutomataFinito &second,string);
         AutomataFinito concat(AutomataFinito &second, string);
+        AutomataFinito estrellitaDeHleene(AutomataFinito &second, string);
         bool verificarCadena(string);
         AutomataFinito volverDeterminista();
         AutomataFinito automataMinimo();
@@ -69,7 +70,7 @@ class AutomataFinito
         Estado * estadoInicial;
         list<char> alfabeto;
         map<string,string> _copiarEstados(map<string,Estado*> second);
-        map<string,string> __copiarEstados(map<string,Estado*> second);
+        map<string,string> __copiarEstados(map<string,Estado*> second, Estado * estadoInicial);
         map<string,Estado *> estados;
         map<char, AutomataFinito> automatasElementales;
         string name;
@@ -77,17 +78,33 @@ class AutomataFinito
         bool determinista;
 };
 
+
 AutomataFinito AutomataFinito::concat(AutomataFinito &second,  string n){
     AutomataFinito res(n);
-    ///CREARALFABETO PENDEJO
-
-
-
+    res.crearAlfabeto(alfabeto);
+    for(char c : second.alfabeto){
+        res._addCaracter(c);
+    }
+    auto nombres1 = res.__copiarEstados(estados,estadoInicial);
+    auto nombres2 = res._copiarEstados(second.estados);
+    bool flag = false;
+    if(second.estadoInicial->aseptacion)flag = true;
+    for(auto iter = estados.begin(); iter != estados.end(); ++iter){
+        if(iter->second->aseptacion){
+            res._addDestinos(nombres1[iter->first],second.estadoInicial->estadosDestino,nombres2);
+            if(!flag){
+                Estado * es;
+                string g = nombres1[iter->first];
+                res._existeEstado(nombres1[iter->first],es);
+                es->aseptacion = false;
+            }
+        }
+    }
     return res;
 }
 
 
-map<string,string> AutomataFinito::__copiarEstados(map<string,Estado*> second){
+map<string,string> AutomataFinito::__copiarEstados(map<string,Estado*> estados, Estado * estadoInicial){
     map<string,string> nombres;
     map<string,Estado *> es;
     string tt = name + to_string(this->estados.size());

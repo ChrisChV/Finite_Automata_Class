@@ -1,0 +1,10 @@
+digraph{
+0 [label="doses0"color = "black"];
+0->1 [label="2"];
+1 [label="doses1"color = "black"];
+1->3 [label="2"];
+2 [label="doses2"color = "black"];
+2->3 [label="2"];
+3 [label="doses3"color = "red"];
+0 [label = "doses0"color = "green"];
+}
