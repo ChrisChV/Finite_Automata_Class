@@ -56,7 +56,7 @@ La funcion principal del programa es generar un autómata que reconozca una expr
         
 2. VISUALIZACIÓN DE UN AUTOMATA
 
-    ![Imagen](/home/Documentos/AutomatasFInitos/autito.jpg)
+    ![Automata Generado a partir de la expresion regular: (a*abab(aba)*)V(b*Va)](autito.jpg "Automata Generado a partir de la expresion regular: (a*abab(aba)*)V(b*Va)")
     
     1. COLORES
     
