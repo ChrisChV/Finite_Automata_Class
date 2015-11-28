@@ -101,7 +101,7 @@ AutomataFinito AutomataFinito::_generarDeExpresionRegular(string expresion, int&
                 if(expresion[i] == '('){
                     string na = name + to_string(operaciones);
                     operaciones++;
-                    res = res.concat(_generarDeExpresionRegular(expresion,i,operaciones,name),na);
+                    res = _generarDeExpresionRegular(expresion,i,operaciones,name);
                     estado = 2;
                 }
                 else if(expresion[i] == ')'){
@@ -131,7 +131,7 @@ AutomataFinito AutomataFinito::_generarDeExpresionRegular(string expresion, int&
                 }
                 else if(find(alfabeto.begin(),alfabeto.end(),expresion[i]) == alfabeto.end()){
                     string e;
-                    if(expresion[i] == '*' or expresion[i] == '+' or expresion[i] == '-'){
+                    if(expresion[i] == '*' or expresion[i] == '+' or expresion[i] == '-' or expresion[i] == 'V'){
                         string h = "Error de sintaxis. La operacion ";
                         h.insert(h.end(),expresion[i]);
                         e = h + " no se puede ejecutar";
@@ -414,7 +414,7 @@ AutomataFinito AutomataFinito::generarDeExpresionRegular(string expresion, strin
                         estado = 2;
                     }
                     else if(expresion[i] == ')'){
-                        string e = "Error de sintaxis. Le falta cerrar abrir (";
+                        string e = "Error de sintaxis. Le falta abrir (";
                         throw(e);
                     }
                     else if(find(alfabeto.begin(),alfabeto.end(),expresion[i]) == alfabeto.end()){
@@ -462,7 +462,7 @@ AutomataFinito AutomataFinito::generarDeExpresionRegular(string expresion, strin
                         estado = 2;
                     }
                     else if(expresion[i] == ')'){
-                        string e = "Error de sintaxis. Le falta cerrar abrir (";
+                        string e = "Error de sintaxis. Le falta abrir (";
                         throw(e);
                     }
                     else if(find(alfabeto.begin(),alfabeto.end(),expresion[i]) == alfabeto.end()){
@@ -515,7 +515,7 @@ AutomataFinito AutomataFinito::generarDeExpresionRegular(string expresion, strin
                         estado = 2;
                     }
                     else if(expresion[i] == ')'){
-                        string e = "Error de sintaxis. Le falta cerrar abrir (";
+                        string e = "Error de sintaxis. Le falta abrir (";
                         throw(e);
                     }
                     else if(find(alfabeto.begin(),alfabeto.end(),expresion[i]) == alfabeto.end()){
@@ -572,7 +572,7 @@ AutomataFinito AutomataFinito::generarDeExpresionRegular(string expresion, strin
                         estado = 2;
                     }
                     else if(expresion[i] == ')'){
-                        string e = "Error de sintaxis. Le falta cerrar abrir (";
+                        string e = "Error de sintaxis. Le falta abrir (";
                         throw(e);
                     }
                     else if(find(alfabeto.begin(),alfabeto.end(),expresion[i]) == alfabeto.end()){
