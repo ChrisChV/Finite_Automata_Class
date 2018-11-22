@@ -1,134 +1,133 @@
-# AutomatasFinitos
+# Finite Automata C++ Class
 
-###Producido y Financiado por Chris Chávez AK XNPIO
+### Created by Christofer Chávez (XnpioChV)
 
-La funcion principal del programa es generar un autómata que reconozca una expresion regular dada.
+The principal function of this class is create a finite automata from a regular expresion. With this class you can create automatas manualy, vizualizate it and verify strings. Also you can apply operators like union, reverse, concatenate, etc, and you can convert any automata in its deterministic form and find its minimal form.
 
-1. CREACION MANUAL DE UNA AUTOMATA
+1. MANUAL CREATION OF AN AUTOMATA
 
     1. CONSTRUCTOR
     
-        Se puede inicializar de dos formas:
+        You can initialize an automata in two ways:
         
-          ```AutomataFinito autito //De esta forma se inicializa el automata con nombre "AutomataDefault";
-          AutomataFinito autito("autito") //De esta forma se inicializa el automata con nombre "autito";```
+          ```AutomataFinito automata // In this way, the automaton with the name "AutomataByDefault" is initialized;
+          AutomataFinito automata("automata") //In this way the automata with name "automata" is initialized;```
           
-        IMPORTANTE: Poner siempre nombre a los automatas, y que al realizar las operaciones entre automatas es mejor
-        que sus nombres sean diferentes.
+        IMPORTANT: Always name automatas, since when performing operations between automata it is better that their names are different.
         
-    2. CREAR ESTADOS
+    2. CREATING STATES
     
-        Se puede crear estados de dos formas:
+        You can create states in two ways:
         
-          ```autito.crearEstado("1") //Se crea un estado de no aseptacion con nombre "1";
-          autito.crearEstado("1",true) //Se crea un estado con nombre "1" que es de asptacion si el segundo parametro                                          es true.```
+          ```automata.crearEstado("1") //A non-acceptance state with name "1" is created;
+          automata.crearEstado("1",true) //A state with name "1" is created, which is an accepted state if the second parameter is true.```
           
-        Si el nombre del estado se repite en el automata, el nuevo estado repetido no se crea.
+        If the name of the state is repeated in the automata, the new repeated state is not created.
         
-    3. CREAR ALFABETO
+    3. CERATING ALPHABET
     
-        Se puede crear el alfabeto de dos formas:
+        You can create the alphabet in two ways:
         
-          ```autito.crearAlfabeto(alfabeto) //Donde alfabeto es un list<char>
-          autito.addCaracter('a') //Añade el caracter 'a' al alfabeto```
+          ```automata.crearAlfabeto(alfabeto) //Where alphabet is a list <char>
+          automata.addCaracter('a') //Add the character 'a' to the alphabet```
           
-        Si el caracter es repetido, este no se ingresa.
+        If the character is repeated, it is not entered.
         
-        IMPORTANTE: Es importante crear el alfabeto antes de crear las relaciones o hacer cualquier operacion.
+        IMPORTANT: It is important to create the alphabet before creating relationships or doing any operation.
     
-    4. CREAR RELACIONES
+    4. CREATING RELATIONSHIPS
     
-        Las relaciones se crean de la siguiente forma
+        Relationships are created in the following way
         
-          ```autito.crearRelacion("1","2",'a') //Se lee: Desde el estado "1", con 'a', voy al estado "2"```
+          ```automata.crearRelacion("1","2",'a') //It reads: From the "1" state, with 'a', I go to the "2" state```
           
-        Si cualquiera de los estados no existe o el caracter no esta en el alfabeto, la relacion no se crea.
+        If any of the states does not exist or the character is not in the alphabet, the relationship is not created.
     
-    5. VERIFICAR CADENA
+    5. VERIFY STRING
     
-        Una vez creado nuestro automata, este puede verificar cadenas:
+        Once created our automata, this can verify strings:
       
-        ```bool flag = autito.verificarCadena("10001110"); //Devuelve true si el automata reconoce la cadena```
+        ```bool flag = automata.verificarCadena("10001110"); //Returns true if the automata recognizes the string```
         
-        Si cualquier caracter en la cadena no existe en el alfabeto, la funcion retorna false.
+        If any character in the string does not exist in the alphabet, the function returns false.
         
-        NOTA: Para poder verificar la cadena, la funcion convierte al automata en un automata determinista si no lo es.
+        NOTE: In order to verify the string, the function converts the automata into a deterministic automata if it is not.
         
-2. VISUALIZACIÓN DE UN AUTOMATA
+2. VISUALIZATION OF AN AUTOMATA
 
-    ![Automata Generado a partir de la expresion regular: (a*abab(aba)*)V(b*Va)](autito.jpg "Automata Generado a partir de la expresion regular: (a*abab(aba)*)V(b*Va)")
+    ![Automata Generado a partir de la expresion regular: (a*abab(aba)*)V(b*Va)](autito.jpg "Automaton Generated from the regular expression: (a*abab(aba)*)V(b*Va)")
     
-    1. COLORES
+    1. COLORS
     
-        * Cuando un Estado esta pintado de Negro, éste es un estado normal.
-        * Cuando un Estado esta pintado de Rojo, éste es un estado de aseptación.
-        * Cuando un Estado esta pintado de Verde, éste es el estado inicial.
-        * Cuando un Estado esta pintado de Azul, éste es el estado inicial y es de aseptación.
+        * When a State is painted in Black, this is a normal state.
+        * When a state is painted red, this is a state of aseptation.
+        * When a State is painted Green, this is the initial state.
+        * When a State is painted Blue, this is the initial state and it is aseptation.
     
-    2. FUNCION
+    2. FUNCTION
     
-        Para poder imprimir el automata, se tiene que ejecutar la siguiente función:
+        To be able to print the automata, you have to execute the following function:
         
-            autito.print();
+            automata.print();
         
-        La funcion genera un pdf con el nombre del automata y lo guarda en la carpeta donde se encuentra el proyecto.
+        The function generates a PDF with the name of the automaton and saves it in the folder where the project is located.
 
-3. OPERACIONES
+3. OPERATIONS
 
-    1. VOLVER DETERMINISTA
+    1. CONVERT TO ITS DETERMINISTIC FORM
     
-        ```autito2 = autito.volverDeterminista();```
+        ```automata2 = automata.volverDeterminista();```
 
-    2. AUTOMATA MÍNIMO
+    2. MINIMUM AUTOMATA
     
-        ```autito2 = autito.volverDeterminista().automataMinimo();```
+        ```automata2 = automata.volverDeterminista().automataMinimo();```
         
-        IMPORTANTE: El autómata tiene que ser determinista para poder encontrar su mínimo.
+        IMPORTANT: The automaton has to be deterministic in order to find its minimum.
     
     3. UNION
     
-        ```autito3 = autito.uni(autito2, "union");```
+        ```automata3 = automata.uni(automata2, "union");```
         
-        El segundo parametro es el nombre del automata resultante.
+        The second parameter is the name of the resulting automaton.
         
-    4. CONCADENACION
+    4. CONCATENATION
     
-        ```autito3 = autito.concat(autito2, "concat");```
+        ```automata3 = automata.concat(automata2, "concat");```
         
-        El segundo parametro es el nombre del automata resultante.
+        The second parameter is the name of the resulting automaton.
         
-    5. ESTRELLA DE KLEENE
+    5. KLEENE'S STAR
     
-        ```autito2 = autito.estrellitaDeKleene();```
+        ```automata2 = automata.estrellitaDeKleene();```
         
-    6. SUMA DE KLEENE
+    6. KLEENE'S SUM
     
-        ```autito2 = autito.sumitaDeKleene();```
+        ```automata2 = automata.sumitaDeKleene();```
         
-    7. INVERSO
+    7. INVERSE
     
-        ```autito2 = autito.reverso();```
+        ```automata2 = automata.reverso();```
         
-    8. COMPLEMENTO
+    8. COMPLEMENT
     
-            autito.complemento();
+            automata.complemento();
     
-4. GENERAR UN AUTOMATA A PARTIR DE UNA EXPRESIÓN REGULAR
+4. GENERATING AN AUTOMATA FROM A REGULAR EXPRETION
 
-    1. PASO 1
+    1. STEP 1
         
-        Crear un Automata con el alfabeto de la expresión regular.
+        Create an Automata with the alphabet of the regular expression.
         
-            AutomataFinito autito("autito");
-            autito.addCaracter('a');
-            autito.addCaracter('b');
+            AutomataFinito automata("automata");
+            automata.addCaracter('a');
+            automata.addCaracter('b');
     
-    2. PASO 2
+    2. STEP 2
     
-        Llamar a la funcion
+        Call te function:
         
-            AutomataFinito resultado = autito2.generarDeExpresionRegular("(a*abab(aba)*)V(b*Va)","resultado");
+            AutomataFinito result = automata.generarDeExpresionRegular("(a*abab(aba)*)V(b*Va)","result");
         
-        El primer parámetro es la expresión regular y el segundo el nombre del automata.
-        El automata resultante es el autómata mínimo.
+        The first parameter is the regular expression and the second the name of the automata.
+        The resulting automata is the minimum automaton.
 
