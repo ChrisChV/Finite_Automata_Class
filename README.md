@@ -1,4 +1,4 @@
-# Finite Automata Class
+# Finite Automata C++ Class
 
 ### Created by Christofer Chávez (XnpioChV)
 
