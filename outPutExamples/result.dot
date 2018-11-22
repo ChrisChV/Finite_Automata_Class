@@ -1,0 +1,21 @@
+digraph{
+0 [label="[[result1;result2;result3;result7;result8;result9]]"color = "red"];
+0->0 [label="a"];
+0->5 [label="b"];
+3 [label="[[result2;result3;result4;result5;result6]]"color = "black"];
+3->3 [label="b"];
+3->1 [label="a"];
+2 [label="[[result2;result3;result7;result8;result9]]"color = "black"];
+2->0 [label="a"];
+2->5 [label="b"];
+5 [label="[basura]"color = "black"];
+5->5 [label="a"];
+5->5 [label="b"];
+4 [label="[result0]"color = "black"];
+4->3 [label="b"];
+4->2 [label="a"];
+1 [label="[result1]"color = "red"];
+1->5 [label="a"];
+1->5 [label="b"];
+4 [label = "[result0]"color = "green"];
+}

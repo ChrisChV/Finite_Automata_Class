@@ -1,6 +1,14 @@
 #ifndef AUTOMATAFINITO_H
 #define AUTOMATAFINITO_H
 
+/***
+ * AutomataFinito.h
+ * 
+ * Created by Christofer Chávez (XnpioChV)
+ * 
+ ***/
+
+
 #include "list"
 #include "map"
 #include "algorithm"
